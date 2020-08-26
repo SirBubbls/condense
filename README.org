@@ -1,0 +1,19 @@
+#+TITLE: Condense
+#+AUTHOR: Lucas Sas
+#+EMAIL: lucassas@live.de
+#+DATE: August 25, 2020
+#+STARTUP: inlineimages nofold
+#+SETUPFILE: https://fniessen.github.io/org-html-themes/setup/theme-readtheorg.setup
+#+EXPORT_FILE_NAME: documentation/index.html
+
+[[https://sirbubbls.github.io/condense/#/][Documentation]]
+
+* Description
+This is python package is the result of my bachelor thesis (https://github.com/SirBubbls/pruning-ba).
+It contains pruning method implementations for artificial neural network models.
+
+** Maintainers
++ @SirBubbls
+
+* Installation
+* Usage
