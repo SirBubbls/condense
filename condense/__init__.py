@@ -7,6 +7,8 @@ Open source repository: github.com/SirBubbls/condense
 """
 
 import sys
+import condense.optimizer
+
 
 if sys.version_info < (3,):
     raise Exception("Python 2 has reached end-of-life and is no longer supported.")
