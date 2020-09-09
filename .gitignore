@@ -17,3 +17,4 @@ tmp/
 .pytest_cache
 .python-version
 dist
+.coverage
