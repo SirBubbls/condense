@@ -30,26 +30,28 @@
 <pre><code class="python">&#34;&#34;&#34;Unit prune a neural network layer.&#34;&#34;&#34;
 
 import numpy as np
+from condense.optimizer.masking_functions import mask_min_value as default_masking_function
 
 
-def u_prune_layer(ndarray, p_sparsity=0.1, selection=None):
+def u_prune_layer(ndarray, p_sparsity=0.1, masking_function=default_masking_function):
     &#34;&#34;&#34;Prunes a ndarray to a desired target sparsity.
 
     Args:
       ndarray: target numpy array
       p_sparsity (float, optional): desired layer sparsity
-      selection: neuron selection function
+      masking_function: neuron masking function
     Returns:
       ndarray: pruned ndarray
     &#34;&#34;&#34;
     shape = ndarray.shape
+
     # deep copy layer
     layer = np.array(ndarray)
 
     neuron_weights = np.abs(layer).sum(0)
 
     # actual pruning operation
-    layer[:, np.argsort(neuron_weights) &lt; int(len(neuron_weights) * p_sparsity)] = 0
+    layer[:, masking_function(neuron_weights, p_sparsity)] = 0
 
     return layer.reshape(shape)</code></pre>
 </details>
@@ -62,7 +64,7 @@ def u_prune_layer(ndarray, p_sparsity=0.1, selection=None):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="condense.optimizer.layer_operations.unit_prune.u_prune_layer"><code class="name flex">
-<span>def <span class="ident">u_prune_layer</span></span>(<span>ndarray, p_sparsity=0.1, selection=None)</span>
+<span>def <span class="ident">u_prune_layer</span></span>(<span>ndarray, p_sparsity=0.1, masking_function=&lt;function mask_min_value&gt;)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Prunes a ndarray to a desired target sparsity.</p>
@@ -72,8 +74,8 @@ def u_prune_layer(ndarray, p_sparsity=0.1, selection=None):
 <dd>target numpy array</dd>
 <dt><strong><code>p_sparsity</code></strong> :&ensp;<code>float</code>, optional</dt>
 <dd>desired layer sparsity</dd>
-<dt><strong><code>selection</code></strong></dt>
-<dd>neuron selection function</dd>
+<dt><strong><code>masking_function</code></strong></dt>
+<dd>neuron masking function</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -84,24 +86,25 @@ def u_prune_layer(ndarray, p_sparsity=0.1, selection=None):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def u_prune_layer(ndarray, p_sparsity=0.1, selection=None):
+<pre><code class="python">def u_prune_layer(ndarray, p_sparsity=0.1, masking_function=default_masking_function):
     &#34;&#34;&#34;Prunes a ndarray to a desired target sparsity.
 
     Args:
       ndarray: target numpy array
       p_sparsity (float, optional): desired layer sparsity
-      selection: neuron selection function
+      masking_function: neuron masking function
     Returns:
       ndarray: pruned ndarray
     &#34;&#34;&#34;
     shape = ndarray.shape
+
     # deep copy layer
     layer = np.array(ndarray)
 
     neuron_weights = np.abs(layer).sum(0)
 
     # actual pruning operation
-    layer[:, np.argsort(neuron_weights) &lt; int(len(neuron_weights) * p_sparsity)] = 0
+    layer[:, masking_function(neuron_weights, p_sparsity)] = 0
 
     return layer.reshape(shape)</code></pre>
 </details>
