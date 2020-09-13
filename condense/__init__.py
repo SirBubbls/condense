@@ -8,6 +8,7 @@ Open source repository: github.com/SirBubbls/condense
 
 import sys
 import condense.optimizer
+import condense.utils
 
 
 if sys.version_info < (3,):
