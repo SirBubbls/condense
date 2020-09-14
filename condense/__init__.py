@@ -13,3 +13,17 @@ import condense.utils
 
 if sys.version_info < (3,):
     raise Exception("Python 2 has reached end-of-life and is no longer supported.")
+
+
+def one_shot(model, t_sparsity):
+    """Prune a model without refitting it.
+
+    Args:
+      model: keras model
+      t_sparsity (float): The desired sparsity of the model after pruning
+    Returns:
+      pruned model
+    """
+    return condense.optimizer.model_operations.pruning.prune_model(model,
+                                                                   t_sparsity,
+                                                                   in_place=False)
