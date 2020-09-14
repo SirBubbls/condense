@@ -44,15 +44,12 @@ graph LR
 
     subgraph module [Pruning Engine]
         weight_pruning(Weight Pruning) --> 
-        neuron_pruning(Neuron Pruning) -->
-        compression(Compression)
-        neuron_pruning --> mask[Sparsity Mask]
+        neuron_pruning(Neuron Pruning) --> mask[Sparsity Mask]
         weight_pruning --> mask[Sparsity Mask]
-    compression --> compressed_model[Compressed Model]
     end
+    refitting(Refitting) --> export[Export]
 
     input[Input Weights] --> weight_pruning
-    compressed_model -.-> refitting(Refitting)
+    input[Input Weights] --> refitting
     mask -.-> refitting
-    compressed_model -.-> export[Export]
 ```
