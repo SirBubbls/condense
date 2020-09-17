@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.1" />
-<title>condense API documentation</title>
-<meta name="description" content="Condense is a pruning framework for artifical neural networks …" />
+<title>condense.optimizer.model_operations.pruning API documentation</title>
+<meta name="description" content="This module provides a high level interface for tensorflow/keras model pruning." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,96 +19,118 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Package <code>condense</code></h1>
+<h1 class="title">Module <code>condense.optimizer.model_operations.pruning</code></h1>
 </header>
 <section id="section-intro">
-<p>Condense is a pruning framework for artifical neural networks.</p>
-<p>This module provides pruning methods for various artifical neural network architectures.</p>
-<p>You can check out the documentation of this module under: <a href="https://sirbubbls.github.io/condense">https://sirbubbls.github.io/condense</a>
-Open source repository: github.com/SirBubbls/condense</p>
+<p>This module provides a high level interface for tensorflow/keras model pruning.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;Condense is a pruning framework for artifical neural networks.
+<pre><code class="python">&#34;&#34;&#34;This module provides a high level interface for tensorflow/keras model pruning.&#34;&#34;&#34;
 
-This module provides pruning methods for various artifical neural network architectures.
-
-You can check out the documentation of this module under: https://sirbubbls.github.io/condense
-Open source repository: github.com/SirBubbls/condense
-&#34;&#34;&#34;
-
-import sys
-import condense.optimizer
-import condense.utils
+import keras
+from condense.optimizer.layer_operations.unit_prune import u_prune_layer
+from condense.optimizer.layer_operations.weight_prune import w_prune_layer
 
 
-if sys.version_info &lt; (3,):
-    raise Exception(&#34;Python 2 has reached end-of-life and is no longer supported.&#34;)
-
-
-def one_shot(model, t_sparsity):
-    &#34;&#34;&#34;Prune a model without refitting it.
+def prune_model(model, p_sparsity, operations=[w_prune_layer, u_prune_layer], in_place=True):
+    &#34;&#34;&#34;This function prunes a model with a list of given operations.
 
     Args:
-      model: keras model
-      t_sparsity (float): The desired sparsity of the model after pruning
+      model: keras model to optimize
+      p_sparsity (float): desired model sparsity
+      operations (function): layer operations to be performed on each layer
+      in_place (boolean): set to true if the original model should be overwritten \
+                    if the parameter is set to false a deep copy of the model will be returned.
+
     Returns:
-      pruned model
+      model: pruned keras model
     &#34;&#34;&#34;
-    return condense.optimizer.model_operations.pruning.prune_model(model,
-                                                                   t_sparsity,
-                                                                   in_place=False)</code></pre>
+    new_weights = []
+
+    for i, layer in enumerate(model.get_weights()):
+        # bias values
+        if i % 2:
+            new_weights.append(layer)
+            continue
+
+        # weights
+        new_weights.append(w_prune_layer(layer, p_sparsity))
+
+    if in_place:
+        model.set_weights(new_weights)
+        return model
+
+    c_model = keras.models.clone_model(model)
+    c_model.set_weights(new_weights)
+    return c_model</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="condense.optimizer" href="#/pdoc/condense/optimizer/index.html">condense.optimizer</a></code></dt>
-<dd>
-<div class="desc"><p>This module implements and defines model optimization methods.</p></div>
-</dd>
-<dt><code class="name"><a title="condense.utils" href="#/pdoc/condense/utils/index.html">condense.utils</a></code></dt>
-<dd>
-<div class="desc"><p>This module contains arbitrary utility functions for neural networks.</p></div>
-</dd>
-</dl>
 </section>
 <section>
 </section>
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="condense.one_shot"><code class="name flex">
-<span>def <span class="ident">one_shot</span></span>(<span>model, t_sparsity)</span>
+<dt id="condense.optimizer.model_operations.pruning.prune_model"><code class="name flex">
+<span>def <span class="ident">prune_model</span></span>(<span>model, p_sparsity, operations=[&lt;function w_prune_layer&gt;, &lt;function u_prune_layer&gt;], in_place=True)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Prune a model without refitting it.</p>
+<div class="desc"><p>This function prunes a model with a list of given operations.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>model</code></strong></dt>
-<dd>keras model</dd>
-<dt><strong><code>t_sparsity</code></strong> :&ensp;<code>float</code></dt>
-<dd>The desired sparsity of the model after pruning</dd>
+<dd>keras model to optimize</dd>
+<dt><strong><code>p_sparsity</code></strong> :&ensp;<code>float</code></dt>
+<dd>desired model sparsity</dd>
+<dt><strong><code>operations</code></strong> :&ensp;<code>function</code></dt>
+<dd>layer operations to be performed on each layer</dd>
+<dt><strong><code>in_place</code></strong> :&ensp;<code>boolean</code></dt>
+<dd>set to true if the original model should be overwritten
+if the parameter is set to false a deep copy of the model will be returned.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>pruned model</p></div>
+<dl>
+<dt><code>model</code></dt>
+<dd>pruned keras model</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def one_shot(model, t_sparsity):
-    &#34;&#34;&#34;Prune a model without refitting it.
+<pre><code class="python">def prune_model(model, p_sparsity, operations=[w_prune_layer, u_prune_layer], in_place=True):
+    &#34;&#34;&#34;This function prunes a model with a list of given operations.
 
     Args:
-      model: keras model
-      t_sparsity (float): The desired sparsity of the model after pruning
+      model: keras model to optimize
+      p_sparsity (float): desired model sparsity
+      operations (function): layer operations to be performed on each layer
+      in_place (boolean): set to true if the original model should be overwritten \
+                    if the parameter is set to false a deep copy of the model will be returned.
+
     Returns:
-      pruned model
+      model: pruned keras model
     &#34;&#34;&#34;
-    return condense.optimizer.model_operations.pruning.prune_model(model,
-                                                                   t_sparsity,
-                                                                   in_place=False)</code></pre>
+    new_weights = []
+
+    for i, layer in enumerate(model.get_weights()):
+        # bias values
+        if i % 2:
+            new_weights.append(layer)
+            continue
+
+        # weights
+        new_weights.append(w_prune_layer(layer, p_sparsity))
+
+    if in_place:
+        model.set_weights(new_weights)
+        return model
+
+    c_model = keras.models.clone_model(model)
+    c_model.set_weights(new_weights)
+    return c_model</code></pre>
 </details>
 </dd>
 </dl>
@@ -122,15 +144,14 @@ def one_shot(model, t_sparsity):
 <ul></ul>
 </div>
 <ul id="index">
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<li><h3>Super-module</h3>
 <ul>
-<li><code><a title="condense.optimizer" href="#/pdoc/condense/optimizer/index.html">condense.optimizer</a></code></li>
-<li><code><a title="condense.utils" href="#/pdoc/condense/utils/index.html">condense.utils</a></code></li>
+<li><code><a title="condense.optimizer.model_operations" href="#/pdoc/condense/optimizer/model_operations/index.html">condense.optimizer.model_operations</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="condense.one_shot" href="#/pdoc/condense/index.html#condense.one_shot">one_shot</a></code></li>
+<li><code><a title="condense.optimizer.model_operations.pruning.prune_model" href="#/pdoc/condense/optimizer/model_operations/pruning.html#condense.optimizer.model_operations.pruning.prune_model">prune_model</a></code></li>
 </ul>
 </li>
 </ul>
