@@ -9,11 +9,14 @@
 [[https://sirbubbls.github.io/condense/#/][Documentation]]
 
 * Description
-This is python package is the result of my bachelor thesis (https://github.com/SirBubbls/pruning-ba).
-It contains pruning method implementations for artificial neural network models.
+This python package is the result of my bachelor thesis (https://github.com/SirBubbls/pruning-ba).
+It contains pruning operation implementations for artificial neural network models.
 
 ** Maintainers
 + @SirBubbls
 
 * Installation
+~python -m pip install git+https://github.com/SirBubbls/condense.git~
+
 * Usage
+Please refert to the official docsify documentation at https://sirbubbls.github.io/condense/ for a detailed guide.
