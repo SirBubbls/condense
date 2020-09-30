@@ -9,6 +9,7 @@ Open source repository: github.com/SirBubbls/condense
 import sys
 import condense.optimizer
 import condense.utils
+import condense.keras
 
 
 if sys.version_info < (3,):
