@@ -15,25 +15,26 @@ class PruningWrapper(keras.layers.Wrapper):
         parent:
         """
         super(PruningWrapper, self).__init__(layer)
-        self.units = 10
+        self.layer = layer
+        # self.step = tf.Variable(0, trainable=False, dtype=tf.int32, name='step')
 
     def prune(self, target_sparsity):
         """Pruning operation on layer."""
         # Calc Threshold
-        abs_weights = tf.sort(tf.reshape(tf.math.abs(self.w), [-1]))
+        abs_weights = tf.sort(tf.reshape(tf.math.abs(self.layer.kernel), [-1]))
 
         size = tf.cast(tf.shape(abs_weights)[0], dtype=tf.float32)
         threshold = tf.gather(abs_weights,
                               tf.cast(size * target_sparsity, dtype=tf.int32))
         # tf.print(tf.cast(tf.cast(tf.shape(abs_weights)[0], dtype=tf.float32) * .2, dtype=tf.int32))
         # tf.print(threshold)
-        mask = tf.cast(tf.math.greater_equal(self.w, threshold), dtype=tf.float32)
+        mask = tf.cast(tf.math.greater_equal(self.layer.kernel, threshold), dtype=tf.float32)
 
         # Apply mask on weight layer
-        self.w.assign(self.w * mask)
+        self.layer.kernel.assign(self.layer.kernel * mask)
 
         # Update Step
-        self.step.assign(self.step + 1)
+        # self.step.assign(self.step + 1)
         return tf.no_op('Pruning')
 
     def build(self, input_shape):
@@ -41,19 +42,10 @@ class PruningWrapper(keras.layers.Wrapper):
 
         parent:
         """
-        self.step = tf.Variable(0, trainable=False, dtype=tf.int32, name='step')
-        self.w = self.add_weight(
-            name='w',
-            shape=(input_shape[-1], self.units),
-            initializer='random_normal',
-            trainable=True
-        )
-        self.b = self.add_weight(
-            name='b',
-            shape=(self.units,),
-            initializer='zero',
-            trainable=True
-        )
+        super(PruningWrapper, self).build(input_shape)
+        self.layer.build(input_shape)
+        self.layer.built = True
+        self.built = True
         # self.mask = self.add_weight(
         #     name='sparsity_mask',
         #     shape=(input_shape[-1], self.units),
@@ -66,4 +58,4 @@ class PruningWrapper(keras.layers.Wrapper):
 
         parent:
         """
-        return tf.matmul(inputs, self.w) + self.b
+        return self.layer.call(inputs)
