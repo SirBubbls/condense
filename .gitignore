@@ -18,3 +18,6 @@ tmp/
 .python-version
 dist
 .coverage
+TAGS
+MANIFEST
+tests/datasets
