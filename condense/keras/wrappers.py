@@ -14,7 +14,8 @@ class PruningWrapper(keras.layers.Wrapper):
 
         parent:
         """
-        super(PruningWrapper, self).__init__(layer)
+        super(PruningWrapper, self).__init__(layer,
+                                             name=f'pruned_{layer.name}')
         self.layer = layer
         # self.step = tf.Variable(0, trainable=False, dtype=tf.int32, name='step')
 
