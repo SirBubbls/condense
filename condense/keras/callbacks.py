@@ -16,4 +16,4 @@ class PruningCallback(Callback):
         for layer in self.model.layers:
             if isinstance(layer, PruningWrapper):
                 # Pruning Operation
-                layer.prune(0.75)
+                layer.prune(0.35)
