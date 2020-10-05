@@ -2,3 +2,4 @@
 
 import condense.optimizer.layer_operations
 import condense.optimizer.model_operations
+import condense.optimizer.sparsity_functions
