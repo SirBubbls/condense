@@ -7,13 +7,29 @@ model.fit(x, y, callbacks=[PruningCallback()])
 """
 from keras.callbacks import Callback
 from condense.keras.wrappers import PruningWrapper
+from condense.utils.layer_utils import calc_layer_sparsity
 
 
 class PruningCallback(Callback):
-    """Required for .fit operation."""
+    """This class is required as a callback for the keras.fit function."""
+
+    def on_train_begin(self, logs=None):
+        """This function is responsible for setting up the pruning strategies for each individual layer."""
+        if not self.params['epochs']:
+            raise Exception('Number of epochs not known so no pruning strategy can be calculated.')
+
+        for layer in self.model.layers:
+            if isinstance(layer, PruningWrapper):
+                layer.strategy.set_base_sparsity(float(calc_layer_sparsity(layer.layer.kernel)))
+                layer.strategy.set_training_params(self.params)
+
     def on_epoch_end(self, epoch, logs=None):
         """Prunes every layer in the model, that is Wrapped by a PruningWrapper."""
         for layer in self.model.layers:
             if isinstance(layer, PruningWrapper):
                 # Pruning Operation
-                layer.prune(0.35)
+                layer.prune()
+
+        for layer in self.model.layers:
+            if isinstance(layer, PruningWrapper):
+                layer.strategy.next_epoch()

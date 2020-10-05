@@ -3,6 +3,7 @@ import logging
 from keras.models import clone_model
 from condense.keras import wrappers
 from condense.keras import support
+from condense.optimizer import pruning_strategies
 
 
 def wrap_model(model):
@@ -33,4 +34,4 @@ def wrap_layer(layer):
     if not support.is_supported_layer(layer):
         logging.warning('Layer %s is not supported.', layer.get_config()["name"])
         return layer
-    return wrappers.PruningWrapper(layer)
+    return wrappers.PruningWrapper(layer, pruning_strategies.Linear(0.75))
