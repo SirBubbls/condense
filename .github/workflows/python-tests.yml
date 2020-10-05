@@ -1,6 +1,9 @@
 name: Static Code Analysis and Tests
 
 on:
+  pull_request:
+    branches: 
+      - 'master'
   push:
     branches:
       - '**'
