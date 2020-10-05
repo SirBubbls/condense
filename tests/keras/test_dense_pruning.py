@@ -18,7 +18,7 @@ def test_simple_model():
         while True:
             yield np.random.rand(4).reshape(1, -1), np.random.rand(2)
 
-    pruned = condense.keras.wrap_model(model)
+    pruned = condense.keras.wrap_model(model, condense.optimizer.sparsity_functions.Linear(0.8))
 
     assert pruned
     assert len(pruned.layers) == len(model.layers), 'layer count should not change due to wrapping'
@@ -35,6 +35,3 @@ def test_simple_model():
                       epochs=1,
                       steps_per_epoch=10,
                       callbacks=[condense.keras.callbacks.PruningCallback()]), 'fit generator on pruned model'
-    info('Pruned Dense Model Sparsity: %f', calc_model_sparsity(pruned))
-    # assert calc_model_sparsity(model) == sparse_old, 'base model sparsity changed after pruning'
-    assert calc_model_sparsity(pruned) > sparse_old + .15, 'sparsity didn\'t increase over 15%'

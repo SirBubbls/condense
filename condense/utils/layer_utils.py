@@ -10,4 +10,6 @@ def calc_layer_sparsity(ndarray):
     Returns:
       float: sparsity percentage (0.0 - 1.0)
     """
-    return 1 - (np.count_nonzero(ndarray) / np.prod(ndarray.shape))
+    if not isinstance(ndarray, np.ndarray):
+        raise ValueError(f'ndarray required {type(ndarray)} passed: {ndarray}')
+    return float(1 - (np.count_nonzero(ndarray) / np.prod(ndarray.shape)))

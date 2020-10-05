@@ -20,7 +20,11 @@ class PruningCallback(Callback):
 
         for layer in self.model.layers:
             if isinstance(layer, PruningWrapper):
-                layer.strategy.set_base_sparsity(float(calc_layer_sparsity(layer.layer.kernel)))
+                layer.strategy.set_base_sparsity(
+                    calc_layer_sparsity(
+                        layer.layer.kernel.numpy()
+                    )
+                )
                 layer.strategy.set_training_params(self.params)
 
     def on_epoch_end(self, epoch, logs=None):

@@ -13,3 +13,4 @@ def test_calc_layer_sparsity():
     assert lu.calc_layer_sparsity(np.zeros((20, 20))) == 1.0, 'zero array should have 1.0 sparsity'
     assert lu.calc_layer_sparsity(
         np.random.rand(20, 20)) == 0.0, 'random array should have 0.0 sparsity'
+    assert type(lu.calc_layer_sparsity(np.zeros((10, 10)))) is float, 'return value should be of type float'
