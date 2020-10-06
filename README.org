@@ -6,7 +6,12 @@
 #+SETUPFILE: https://fniessen.github.io/org-html-themes/setup/theme-readtheorg.setup
 #+EXPORT_FILE_NAME: documentation/index.html
 
-[[https://sirbubbls.github.io/condense/#/][Documentation]]
+[[https://pypi.org/project/condense/][file:https://pypip.in/v/condense/badge.png]]
+[[https://pypi.org/project/condense/#files ][file:https://pypip.in/d/condense/badge.png]]
+[[https://lbesson.mit-license.org/][file:https://img.shields.io/badge/License-MIT-blue.svg]]
+[[https://www.python.org/][file:https://img.shields.io/badge/Made%20with-Python-1f425f.svg]]
+[[https://sirbubbls.github.io/condense][file:https://img.shields.io/badge/Documentation-Online-Green.svg]]
+
 
 * Description
 This python package is the result of my bachelor thesis (https://github.com/SirBubbls/pruning-ba).
