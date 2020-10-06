@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name='condense',
     packages=['condense'],
-    version='0.01-beta',
+    version='0.02',
     license='MIT',
     description='Neural Network Pruning Framework',
     author='Lucas Sas Brunschier',
