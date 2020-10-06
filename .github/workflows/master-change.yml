@@ -58,7 +58,7 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add docs/pdoc/
-        git commit -m "Pdoc Documentation Generation"
+        git commit --allow-empty -m "Pdoc Documentation Generation"
     - name: Push Documentation
       uses: ad-m/github-push-action@master
       with:

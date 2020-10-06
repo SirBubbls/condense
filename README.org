@@ -16,7 +16,8 @@ It contains pruning operation implementations for artificial neural network mode
 + @SirBubbls
 
 * Installation
-~python -m pip install git+https://github.com/SirBubbls/condense.git~
+- ~pip install condense~
+- ~python -m pip install git+https://github.com/SirBubbls/condense.git~
 
 * Usage
-Please refert to the official docsify documentation at https://sirbubbls.github.io/condense/ for a detailed guide.
+Please refer to the official docsify documentation at https://sirbubbls.github.io/condense/ for a detailed guide.
