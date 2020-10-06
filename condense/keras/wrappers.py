@@ -13,25 +13,30 @@ class PruningWrapper(keras.layers.Wrapper):
         super(PruningWrapper, self).__init__(layer,
                                              name=f'pruned_{layer.name}')
         self.layer = layer
-        self.step = tf.Variable(0, trainable=False, dtype=tf.int32, name='step')
         self.strategy = strategy
 
-    def prune(self):
-        """Pruning operation on layer."""
+    def prune(self, t_sparsity=None):
+        """Execute pruning operation on layer.
+
+        Args:
+          t_sparsity (float): if you want to run the pruning manually
+                              you can set a desired sparsity through this argument
+        """
+        if not t_sparsity:
+            t_sparsity = self.strategy.get_epoch_sparsity()
         # Calc Threshold
         abs_weights = tf.sort(tf.reshape(tf.math.abs(self.layer.kernel), [-1]))
 
         size = tf.cast(tf.shape(abs_weights)[0], dtype=tf.float32)
         threshold = tf.gather(abs_weights,
-                              tf.cast(size * self.strategy.get_epoch_sparsity(), dtype=tf.int32))
+                              tf.cast(size * t_sparsity, dtype=tf.int32))
 
-        mask = tf.cast(tf.math.greater_equal(self.layer.kernel, threshold), dtype=tf.float32)
+        mask = tf.cast(tf.math.greater_equal(tf.math.abs(self.layer.kernel), threshold), dtype=tf.float32)
 
         # Apply mask on weight layer
         self.layer.kernel.assign(self.layer.kernel * mask)
 
         # Update Step
-        self.step.assign(self.step + 1)
         return tf.no_op('Pruning')
 
     def build(self, input_shape):

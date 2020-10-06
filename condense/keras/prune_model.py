@@ -1,5 +1,6 @@
 """This module provides a high level interface for layer augmentation."""
 import logging
+import numpy as np
 from keras.models import clone_model
 from condense.keras import wrappers
 from condense.keras import support
@@ -15,6 +16,7 @@ def wrap_model(model, sparsity_fn):
       sparsity_fn: desired sparsity function for this model
     Todos:
        * layers are not deep copied
+       * support for custom weights in PruningWrapper
     Returns:
       Augemented model (not a deepcopy)
     """
@@ -29,11 +31,15 @@ def wrap_model(model, sparsity_fn):
             if not support.is_supported_layer(layer):
                 logging.warning('Layer %s is not supported.', layer.get_config()["name"])
                 return layer
-            return wrappers.PruningWrapper(layer, deepcopy(sparsity_fn))
+            wrapper = wrappers.PruningWrapper(layer, deepcopy(sparsity_fn))
+            return wrapper
 
+    weights = np.array(model.get_weights())
     temp_wrapper = __WrappingFunction(sparsity_fn)
-    return clone_model(model=model,
-                       clone_function=temp_wrapper.wrap)
+    new_model = clone_model(model=model,
+                            clone_function=temp_wrapper.wrap)
+    new_model.set_weights(weights)
+    return new_model
 
 
 def wrap_layer(layer, sparsity_fn):

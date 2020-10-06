@@ -1,11 +1,9 @@
 """Model pruning module tests."""
 import keras
 import pytest
-import numpy as np
 from logging import info
 from condense.optimizer.model_operations.pruning import prune_model
 from condense.utils.model_utils import calc_model_sparsity
-from condense.utils.layer_utils import calc_layer_sparsity
 
 
 @pytest.fixture
