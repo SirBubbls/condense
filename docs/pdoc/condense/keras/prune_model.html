@@ -29,6 +29,7 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;This module provides a high level interface for layer augmentation.&#34;&#34;&#34;
 import logging
+import numpy as np
 from keras.models import clone_model
 from condense.keras import wrappers
 from condense.keras import support
@@ -44,6 +45,7 @@ def wrap_model(model, sparsity_fn):
       sparsity_fn: desired sparsity function for this model
     Todos:
        * layers are not deep copied
+       * support for custom weights in PruningWrapper
     Returns:
       Augemented model (not a deepcopy)
     &#34;&#34;&#34;
@@ -58,11 +60,15 @@ def wrap_model(model, sparsity_fn):
             if not support.is_supported_layer(layer):
                 logging.warning(&#39;Layer %s is not supported.&#39;, layer.get_config()[&#34;name&#34;])
                 return layer
-            return wrappers.PruningWrapper(layer, deepcopy(sparsity_fn))
+            wrapper = wrappers.PruningWrapper(layer, deepcopy(sparsity_fn))
+            return wrapper
 
+    weights = np.array(model.get_weights())
     temp_wrapper = __WrappingFunction(sparsity_fn)
-    return clone_model(model=model,
-                       clone_function=temp_wrapper.wrap)
+    new_model = clone_model(model=model,
+                            clone_function=temp_wrapper.wrap)
+    new_model.set_weights(weights)
+    return new_model
 
 
 def wrap_layer(layer, sparsity_fn):
@@ -138,6 +144,7 @@ def wrap_layer(layer, sparsity_fn):
 <h2 id="todos">Todos</h2>
 <ul>
 <li>layers are not deep copied</li>
+<li>support for custom weights in PruningWrapper</li>
 </ul>
 <h2 id="returns">Returns</h2>
 <p>Augemented model (not a deepcopy)</p></div>
@@ -153,6 +160,7 @@ def wrap_layer(layer, sparsity_fn):
       sparsity_fn: desired sparsity function for this model
     Todos:
        * layers are not deep copied
+       * support for custom weights in PruningWrapper
     Returns:
       Augemented model (not a deepcopy)
     &#34;&#34;&#34;
@@ -167,11 +175,15 @@ def wrap_layer(layer, sparsity_fn):
             if not support.is_supported_layer(layer):
                 logging.warning(&#39;Layer %s is not supported.&#39;, layer.get_config()[&#34;name&#34;])
                 return layer
-            return wrappers.PruningWrapper(layer, deepcopy(sparsity_fn))
+            wrapper = wrappers.PruningWrapper(layer, deepcopy(sparsity_fn))
+            return wrapper
 
+    weights = np.array(model.get_weights())
     temp_wrapper = __WrappingFunction(sparsity_fn)
-    return clone_model(model=model,
-                       clone_function=temp_wrapper.wrap)</code></pre>
+    new_model = clone_model(model=model,
+                            clone_function=temp_wrapper.wrap)
+    new_model.set_weights(weights)
+    return new_model</code></pre>
 </details>
 </dd>
 </dl>
