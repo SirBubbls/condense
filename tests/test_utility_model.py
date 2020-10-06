@@ -1,6 +1,5 @@
 """Tests for model utility functions."""
 import keras
-import numpy as np
 from condense.utils.model_utils import calc_model_sparsity
 
 

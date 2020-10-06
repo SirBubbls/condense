@@ -31,7 +31,8 @@ def test_model_pruning_sparsity(example_model, t_sparsity=0.5, accepted_delta=0.
     prune_model(example_model, t_sparsity)
     pruned_sparsity = calc_model_sparsity(example_model)
     assert abs(unpruned_sparsity - t_sparsity) > 0.4, 'base model is to sparse'
-    assert abs(t_sparsity - pruned_sparsity) < accepted_delta, 'missed target delta'
+    assert abs(t_sparsity - pruned_sparsity) < accepted_delta, f"""missed target delta by
+        {abs(abs(t_sparsity - pruned_sparsity) - accepted_delta)}"""
 
 
 def test_in_place(example_model):
@@ -41,3 +42,19 @@ def test_in_place(example_model):
     assert (example_model.get_weights()[0] == o_weights[0]).all(), \
         'original model shouldn\'t change'
     assert (n_model.get_weights()[0] != o_weights[0]).any(), 'return pruned model'
+
+
+def test_illegal_sparsity_values(example_model):
+    """Passing illegal values into sparsity argument."""
+    model_size = len(example_model.get_weights())
+    with pytest.raises(Exception):
+        prune_model(example_model, 1.1)
+
+    with pytest.raises(Exception):
+        prune_model(example_model, -0.1)
+
+    with pytest.raises(Exception):
+        sparsity = [0.5] * model_size
+        sparsity[1] = 1.1
+        prune_model(example_model,
+                    sparsity)
