@@ -25,4 +25,50 @@ It contains pruning operation implementations for artificial neural network mode
 - ~python -m pip install git+https://github.com/SirBubbls/condense.git~
 
 * Usage
-Please refer to the official docsify documentation at https://sirbubbls.github.io/condense/ for a detailed guide.
+#+begin_quote
+Please refer to the official docsify [[https://sirbubbls.github.io/condense/#/quick_start][documentation]] for a detailed guide.
+
+There is also an [[https://sirbubbls.github.io/condense/#/pdoc/condense/index.html][API documentation]] available.
+#+end_quote
+
+** Using the Keras Compatability Module (~condense.keras~)
+#+BEGIN_SRC python
+import condense
+import kreas
+
+# Load your model
+model = keras.models.load_model('...')
+
+# Apply the PruningWrapper automatically to all possible layers of the model
+pruned = condense.keras.wrap_model(model,
+                                   # constant 50% sparsity target
+                                   condense.optimizer.sparsity_functions.Constant(0.5))
+
+# You need to recompile your model after pruning it
+pruned.compile('adam', 'mse')
+
+# Either train your model from scratch or one-shot prune it.
+# For both approaches you need to call the fit() operation.
+# fit() triggers the PruningCallback and the callback calls the pruning operation of each layer
+pruned.fit(data_generator,
+           epochs=30,  # 1 for a 'kind of one-shot' approach
+           steps_per_epoch=1,
+           callbacks=[condense.keras.PruningCallback()])  # Important
+
+# weights are now pruned
+#+END_SRC
+
+** Simple ~one_shot~ pruning
+
+#+BEGIN_SRC python
+import condense
+import kreas
+
+# Load your model
+model = keras.models.load_model('...')
+
+# Prune the model with a 30% sparsity target
+pruned = condense.one_shot(model, 0.3)
+
+# weights are now pruned
+#+END_SRC
