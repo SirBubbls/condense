@@ -21,3 +21,5 @@ dist
 TAGS
 MANIFEST
 tests/datasets
+notebook/logs
+notebook/models
