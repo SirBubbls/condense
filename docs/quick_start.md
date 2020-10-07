@@ -23,7 +23,7 @@ pruned_model = condense.one_shot(model, 0.3)   # 30% desired model sparsity
 ```
 
 ### Keras/TensorFlow 2.0
-A more sophisticated method of pruning is using the `condense.keras` comparability module.
+A more sophisticated method of pruning is using the `condense.keras` compatability module.
 
 ```python
 import keras
@@ -36,3 +36,7 @@ augmented_model = condense.keras.prune_model(model)
 # First we need to fit the model with the a callback class assigned.
 augmented_model.fit(gen, callbacks=[condense.keras.callbacks.PruningCallback()])
 ```
+
+> For a real word example you can check out this 
+[Convolutional Layer Pruning (MNIST).ipynb](https://github.com/SirBubbls/condense/blob/dev/notebook/Convolutional%20Layer%20Pruning%20(MNIST).ipynb )
+Jupyter Notebook.
