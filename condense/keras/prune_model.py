@@ -1,6 +1,5 @@
 """This module provides a high level interface for layer augmentation."""
 import logging
-import numpy as np
 from keras.models import clone_model
 from condense.keras import wrappers
 from condense.keras import support
@@ -34,11 +33,19 @@ def wrap_model(model, sparsity_fn):
             wrapper = wrappers.PruningWrapper(layer, deepcopy(sparsity_fn))
             return wrapper
 
-    weights = np.array(model.get_weights())
+    # It is important to get the weights of each layer individually,
+    # because the wrapper will add additional variables to the model.
+    weights = [layer.get_weights() for layer in model.layers]
+
     temp_wrapper = __WrappingFunction(sparsity_fn)
     new_model = clone_model(model=model,
                             clone_function=temp_wrapper.wrap)
-    new_model.set_weights(weights)
+
+    # Apply saved weights to each layer of the wrapped model individually.
+    for weight, layer in zip(weights, new_model.layers):
+        if isinstance(layer, wrappers.PruningWrapper):
+            layer.layer.set_weights(weight)
+
     return new_model
 
 
