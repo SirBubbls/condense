@@ -6,11 +6,13 @@ You can check out the documentation of this module under: https://sirbubbls.gith
 Open source repository: github.com/SirBubbls/condense
 """
 
+import logging
 import sys
 import condense.optimizer
 import condense.utils
 import condense.keras
 
+logger = logging.getLogger('condense')
 
 if sys.version_info < (3,):
     raise Exception("Python 2 has reached end-of-life and is no longer supported.")
