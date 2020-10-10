@@ -63,17 +63,29 @@ class PruningWrapper(keras.layers.Wrapper):
         super(PruningWrapper, self).build(input_shape)
         self.layer.build(input_shape)
         self.layer.built = True
+        self.__build_mask(input_shape)
         self.built = True
-        # self.mask = self.add_weight(
-        #     name='sparsity_mask',
-        #     shape=(input_shape[-1], self.units),
-        #     initializer='ones',
-        #     trainable=False
-        # )
+
+    def __build_mask(self, input_shape):
+        """Initialzie mask for each correspondig layer.
+
+        Todos:
+            * make masks based on layer.get_weights() -> layer type agnostic
+        """
+        # Dense Layer
+        if isinstance(self.layer, keras.layers.Dense):
+            self.mask = self.add_weight(
+                name=f'{self.layer.name}_mask',
+                shape=(input_shape[-1], self.units),
+                initializer='ones',
+                trainable=False
+            )
+
 
     def call(self, inputs, training=False):
         """Override call method.
 
         parent:
         """
+        self.layer.kernel.assign(self.layer.kernel * self.mask)
         return self.layer.call(inputs)

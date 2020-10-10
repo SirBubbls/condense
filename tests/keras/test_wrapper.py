@@ -1,12 +1,11 @@
-import tensorflow as tf
-import keras
-import numpy as np
-import pytest
-import condense
-import logging
 from copy import deepcopy
-from condense.keras import PruningWrapper
+
+import numpy as np
+import tensorflow as tf
 from keras.layers import Dense
+
+import condense
+from condense.keras import PruningWrapper
 
 
 def test_gradient_generation():
