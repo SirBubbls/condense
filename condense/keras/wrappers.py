@@ -1,6 +1,7 @@
 """This module implements a keras layer Wrapper."""
 import keras
 import tensorflow as tf
+from .support import is_supported_layer
 
 
 class PruningWrapper(keras.layers.Wrapper):
@@ -10,10 +11,23 @@ class PruningWrapper(keras.layers.Wrapper):
 
         parent:
         """
+        if not is_supported_layer(layer):
+            raise ValueError(f'Layer {layer.name} is not supported')
+
         super(PruningWrapper, self).__init__(layer,
                                              name=f'pruned_{layer.name}')
         self.layer = layer
         self.strategy = strategy
+        self.mask = self.add_weight(
+            name=f'{layer.name}_mask'
+        )
+        if isinstance(layer, keras.layers.Dense):
+            self.units = self.layer.units
+
+    @property
+    def kernel(self):
+        """Returns the pruned kernel of this layer."""
+        return self.layer.kernel * self.mask
 
     def prune(self, t_sparsity=None):
         """Execute pruning operation on layer.
@@ -24,6 +38,7 @@ class PruningWrapper(keras.layers.Wrapper):
         """
         if not t_sparsity:
             t_sparsity = self.strategy.get_epoch_sparsity()
+
         # Calc Threshold
         abs_weights = tf.sort(tf.reshape(tf.math.abs(self.layer.kernel), [-1]))
 
@@ -31,10 +46,11 @@ class PruningWrapper(keras.layers.Wrapper):
         threshold = tf.gather(abs_weights,
                               tf.cast(size * t_sparsity, dtype=tf.int32))
 
-        mask = tf.cast(tf.math.greater_equal(tf.math.abs(self.layer.kernel), threshold), dtype=tf.float32)
+        # Assign Mask
+        self.mask.assign(tf.cast(tf.math.greater_equal(tf.math.abs(self.layer.kernel), threshold), dtype=tf.float32))
 
         # Apply mask on weight layer
-        self.layer.kernel.assign(self.layer.kernel * mask)
+        self.layer.kernel.assign(self.layer.kernel * self.mask)
 
         # Update Step
         return tf.no_op('Pruning')
