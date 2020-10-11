@@ -46,6 +46,9 @@ def wrap_model(model, sparsity_fn):
         if isinstance(layer, wrappers.PruningWrapper):
             layer.layer.set_weights(weight)
 
+    if model.optimizer and model.loss:
+        new_model.compile(model.optimizer, model.loss)
+
     return new_model
 
 
