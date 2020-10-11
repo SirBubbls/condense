@@ -27,7 +27,7 @@ def wrap_model(model, sparsity_fn):
             self.funciton = sparsity_fn
 
         def wrap(self, layer):
-            if not support.is_supported_layer(layer):
+            if not support.is_supported_layer(layer) or 'output' in layer.name:
                 logging.warning('Layer %s is not supported.', layer.get_config()["name"])
                 return layer
             wrapper = wrappers.PruningWrapper(layer, deepcopy(sparsity_fn))
