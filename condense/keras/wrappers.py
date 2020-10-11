@@ -99,7 +99,6 @@ class PruningWrapper(keras.layers.Wrapper):
                 trainable=False
             )
 
-
     def call(self, inputs, training=False):
         """Override call method.
 

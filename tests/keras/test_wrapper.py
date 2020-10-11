@@ -3,9 +3,11 @@ from copy import deepcopy
 import numpy as np
 import tensorflow as tf
 from keras.layers import Dense
+from keras.models import Sequential
 
 import condense
 from condense.keras import PruningWrapper
+from condense.optimizer.sparsity_functions import Constant
 
 
 def test_gradient_generation():
@@ -67,7 +69,7 @@ def test_wrapper_mask_application():
     """Check if mask gets applied correctly to layer."""
     wrapped = PruningWrapper(Dense(5, input_shape=(3,)),
                              condense.optimizer.sparsity_functions.Constant(0.5))
-    output = Dense(1)
+    _ = Dense(1)
     wrapped.build(input_shape=(3,))
     assert not (wrapped.mask.numpy() == 0).any(), 'mask not initalized correctly'
     assert (wrapped.kernel.numpy() == wrapped.layer.kernel.numpy()).all(), """
