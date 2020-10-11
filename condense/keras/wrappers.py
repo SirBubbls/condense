@@ -1,7 +1,25 @@
 """This module implements a keras layer Wrapper."""
 import keras
 import tensorflow as tf
+
 from .support import is_supported_layer
+
+
+def get_internal_weights(model):
+    """Get all weights of a model without Wrapper specific weights.
+
+    Args:
+      model (keras.models.Model): wrapped model
+    Returns:
+      internal layer weights
+    """
+    weights = []
+    for layer in model.layers:
+        if isinstance(layer, PruningWrapper):
+            weights.append(layer.layer.get_weights())
+        else:
+            weights.append(layer.get_weights())
+    return weights
 
 
 class PruningWrapper(keras.layers.Wrapper):

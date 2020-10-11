@@ -75,3 +75,29 @@ def test_wrapper_mask_application():
 
     wrapped.prune(0.5)
     assert (wrapped.kernel.numpy() == wrapped.layer.kernel.numpy()).all(), ""
+
+
+def test_get_internal_weights():
+    """Test if get_internal_weights works as intended."""
+    model = Sequential(layers=[
+        Dense(10, input_shape=(3,)),
+        PruningWrapper(Dense(20), Constant(0.5)),
+        PruningWrapper(Dense(20), Constant(0.5)),
+        Dense(10, input_shape=(3,))
+    ])
+
+    model.build()
+    internal_weights = condense.keras.wrappers.get_internal_weights(model)
+
+    for layer, weight in zip(model.layers, internal_weights):
+
+        # Check for Bias & Weight
+        assert len(weight) == 2, 'layers should have 2 weights'
+        assert len(weight[0].shape) == 2, 'weights should have two dimensions'
+        assert len(weight[1].shape) == 1, 'bias one dimensional'
+
+        if isinstance(layer, PruningWrapper):
+            layer = layer.layer
+
+        assert (layer.kernel.numpy() == weight[0]).all(), 'Kernel doesn\'t match'
+        assert (layer.bias.numpy() == weight[1]).all(), 'Bias doesn\'t match'
