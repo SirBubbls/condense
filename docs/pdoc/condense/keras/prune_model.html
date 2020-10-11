@@ -29,7 +29,6 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;This module provides a high level interface for layer augmentation.&#34;&#34;&#34;
 import logging
-import numpy as np
 from keras.models import clone_model
 from condense.keras import wrappers
 from condense.keras import support
@@ -57,17 +56,28 @@ def wrap_model(model, sparsity_fn):
             self.funciton = sparsity_fn
 
         def wrap(self, layer):
-            if not support.is_supported_layer(layer):
+            if not support.is_supported_layer(layer) or &#39;output&#39; in layer.name:
                 logging.warning(&#39;Layer %s is not supported.&#39;, layer.get_config()[&#34;name&#34;])
                 return layer
             wrapper = wrappers.PruningWrapper(layer, deepcopy(sparsity_fn))
             return wrapper
 
-    weights = np.array(model.get_weights())
+    # It is important to get the weights of each layer individually,
+    # because the wrapper will add additional variables to the model.
+    weights = [layer.get_weights() for layer in model.layers]
+
     temp_wrapper = __WrappingFunction(sparsity_fn)
     new_model = clone_model(model=model,
                             clone_function=temp_wrapper.wrap)
-    new_model.set_weights(weights)
+
+    # Apply saved weights to each layer of the wrapped model individually.
+    for weight, layer in zip(weights, new_model.layers):
+        if isinstance(layer, wrappers.PruningWrapper):
+            layer.layer.set_weights(weight)
+
+    if model.optimizer and model.loss:
+        new_model.compile(model.optimizer, model.loss)
+
     return new_model
 
 
@@ -172,17 +182,28 @@ def wrap_layer(layer, sparsity_fn):
             self.funciton = sparsity_fn
 
         def wrap(self, layer):
-            if not support.is_supported_layer(layer):
+            if not support.is_supported_layer(layer) or &#39;output&#39; in layer.name:
                 logging.warning(&#39;Layer %s is not supported.&#39;, layer.get_config()[&#34;name&#34;])
                 return layer
             wrapper = wrappers.PruningWrapper(layer, deepcopy(sparsity_fn))
             return wrapper
 
-    weights = np.array(model.get_weights())
+    # It is important to get the weights of each layer individually,
+    # because the wrapper will add additional variables to the model.
+    weights = [layer.get_weights() for layer in model.layers]
+
     temp_wrapper = __WrappingFunction(sparsity_fn)
     new_model = clone_model(model=model,
                             clone_function=temp_wrapper.wrap)
-    new_model.set_weights(weights)
+
+    # Apply saved weights to each layer of the wrapped model individually.
+    for weight, layer in zip(weights, new_model.layers):
+        if isinstance(layer, wrappers.PruningWrapper):
+            layer.layer.set_weights(weight)
+
+    if model.optimizer and model.loss:
+        new_model.compile(model.optimizer, model.loss)
+
     return new_model</code></pre>
 </details>
 </dd>

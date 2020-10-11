@@ -31,6 +31,25 @@
 import keras
 import tensorflow as tf
 
+from .support import is_supported_layer
+
+
+def get_internal_weights(model):
+    &#34;&#34;&#34;Get all weights of a model without Wrapper specific weights.
+
+    Args:
+      model (keras.models.Model): wrapped model
+    Returns:
+      internal layer weights
+    &#34;&#34;&#34;
+    weights = []
+    for layer in model.layers:
+        if isinstance(layer, PruningWrapper):
+            weights.append(layer.layer.get_weights())
+        else:
+            weights.append(layer.get_weights())
+    return weights
+
 
 class PruningWrapper(keras.layers.Wrapper):
     &#34;&#34;&#34;Wrapper for Keras Dense Layers.&#34;&#34;&#34;
@@ -39,10 +58,23 @@ class PruningWrapper(keras.layers.Wrapper):
 
         parent:
         &#34;&#34;&#34;
+        if not is_supported_layer(layer):
+            raise ValueError(f&#39;Layer {layer.name} is not supported&#39;)
+
         super(PruningWrapper, self).__init__(layer,
                                              name=f&#39;pruned_{layer.name}&#39;)
         self.layer = layer
         self.strategy = strategy
+        self.mask = self.add_weight(
+            name=f&#39;{layer.name}_mask&#39;
+        )
+        if isinstance(layer, keras.layers.Dense):
+            self.units = self.layer.units
+
+    @property
+    def kernel(self):
+        &#34;&#34;&#34;Returns the pruned kernel of this layer.&#34;&#34;&#34;
+        return self.layer.kernel * self.mask
 
     def prune(self, t_sparsity=None):
         &#34;&#34;&#34;Execute pruning operation on layer.
@@ -53,6 +85,7 @@ class PruningWrapper(keras.layers.Wrapper):
         &#34;&#34;&#34;
         if not t_sparsity:
             t_sparsity = self.strategy.get_epoch_sparsity()
+
         # Calc Threshold
         abs_weights = tf.sort(tf.reshape(tf.math.abs(self.layer.kernel), [-1]))
 
@@ -60,10 +93,11 @@ class PruningWrapper(keras.layers.Wrapper):
         threshold = tf.gather(abs_weights,
                               tf.cast(size * t_sparsity, dtype=tf.int32))
 
-        mask = tf.cast(tf.math.greater_equal(tf.math.abs(self.layer.kernel), threshold), dtype=tf.float32)
+        # Assign Mask
+        self.mask.assign(tf.cast(tf.math.greater_equal(tf.math.abs(self.layer.kernel), threshold), dtype=tf.float32))
 
         # Apply mask on weight layer
-        self.layer.kernel.assign(self.layer.kernel * mask)
+        self.layer.kernel.assign(self.layer.kernel * self.mask)
 
         # Update Step
         return tf.no_op(&#39;Pruning&#39;)
@@ -76,19 +110,30 @@ class PruningWrapper(keras.layers.Wrapper):
         super(PruningWrapper, self).build(input_shape)
         self.layer.build(input_shape)
         self.layer.built = True
+        self.__build_mask(input_shape)
         self.built = True
-        # self.mask = self.add_weight(
-        #     name=&#39;sparsity_mask&#39;,
-        #     shape=(input_shape[-1], self.units),
-        #     initializer=&#39;ones&#39;,
-        #     trainable=False
-        # )
+
+    def __build_mask(self, input_shape):
+        &#34;&#34;&#34;Initialzie mask for each correspondig layer.
+
+        Todos:
+            * make masks based on layer.get_weights() -&gt; layer type agnostic
+        &#34;&#34;&#34;
+        # Dense Layer
+        if isinstance(self.layer, keras.layers.Dense):
+            self.mask = self.add_weight(
+                name=f&#39;{self.layer.name}_mask&#39;,
+                shape=(input_shape[-1], self.units),
+                initializer=&#39;ones&#39;,
+                trainable=False
+            )
 
     def call(self, inputs, training=False):
         &#34;&#34;&#34;Override call method.
 
         parent:
         &#34;&#34;&#34;
+        self.layer.kernel.assign(self.layer.kernel * self.mask)
         return self.layer.call(inputs)</code></pre>
 </details>
 </section>
@@ -97,6 +142,42 @@ class PruningWrapper(keras.layers.Wrapper):
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="condense.keras.wrappers.get_internal_weights"><code class="name flex">
+<span>def <span class="ident">get_internal_weights</span></span>(<span>model)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get all weights of a model without Wrapper specific weights.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>model</code></strong> :&ensp;<code>keras.models.Model</code></dt>
+<dd>wrapped model</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>internal layer weights</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_internal_weights(model):
+    &#34;&#34;&#34;Get all weights of a model without Wrapper specific weights.
+
+    Args:
+      model (keras.models.Model): wrapped model
+    Returns:
+      internal layer weights
+    &#34;&#34;&#34;
+    weights = []
+    for layer in model.layers:
+        if isinstance(layer, PruningWrapper):
+            weights.append(layer.layer.get_weights())
+        else:
+            weights.append(layer.get_weights())
+    return weights</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
@@ -120,10 +201,23 @@ class PruningWrapper(keras.layers.Wrapper):
 
         parent:
         &#34;&#34;&#34;
+        if not is_supported_layer(layer):
+            raise ValueError(f&#39;Layer {layer.name} is not supported&#39;)
+
         super(PruningWrapper, self).__init__(layer,
                                              name=f&#39;pruned_{layer.name}&#39;)
         self.layer = layer
         self.strategy = strategy
+        self.mask = self.add_weight(
+            name=f&#39;{layer.name}_mask&#39;
+        )
+        if isinstance(layer, keras.layers.Dense):
+            self.units = self.layer.units
+
+    @property
+    def kernel(self):
+        &#34;&#34;&#34;Returns the pruned kernel of this layer.&#34;&#34;&#34;
+        return self.layer.kernel * self.mask
 
     def prune(self, t_sparsity=None):
         &#34;&#34;&#34;Execute pruning operation on layer.
@@ -134,6 +228,7 @@ class PruningWrapper(keras.layers.Wrapper):
         &#34;&#34;&#34;
         if not t_sparsity:
             t_sparsity = self.strategy.get_epoch_sparsity()
+
         # Calc Threshold
         abs_weights = tf.sort(tf.reshape(tf.math.abs(self.layer.kernel), [-1]))
 
@@ -141,10 +236,11 @@ class PruningWrapper(keras.layers.Wrapper):
         threshold = tf.gather(abs_weights,
                               tf.cast(size * t_sparsity, dtype=tf.int32))
 
-        mask = tf.cast(tf.math.greater_equal(tf.math.abs(self.layer.kernel), threshold), dtype=tf.float32)
+        # Assign Mask
+        self.mask.assign(tf.cast(tf.math.greater_equal(tf.math.abs(self.layer.kernel), threshold), dtype=tf.float32))
 
         # Apply mask on weight layer
-        self.layer.kernel.assign(self.layer.kernel * mask)
+        self.layer.kernel.assign(self.layer.kernel * self.mask)
 
         # Update Step
         return tf.no_op(&#39;Pruning&#39;)
@@ -157,19 +253,30 @@ class PruningWrapper(keras.layers.Wrapper):
         super(PruningWrapper, self).build(input_shape)
         self.layer.build(input_shape)
         self.layer.built = True
+        self.__build_mask(input_shape)
         self.built = True
-        # self.mask = self.add_weight(
-        #     name=&#39;sparsity_mask&#39;,
-        #     shape=(input_shape[-1], self.units),
-        #     initializer=&#39;ones&#39;,
-        #     trainable=False
-        # )
+
+    def __build_mask(self, input_shape):
+        &#34;&#34;&#34;Initialzie mask for each correspondig layer.
+
+        Todos:
+            * make masks based on layer.get_weights() -&gt; layer type agnostic
+        &#34;&#34;&#34;
+        # Dense Layer
+        if isinstance(self.layer, keras.layers.Dense):
+            self.mask = self.add_weight(
+                name=f&#39;{self.layer.name}_mask&#39;,
+                shape=(input_shape[-1], self.units),
+                initializer=&#39;ones&#39;,
+                trainable=False
+            )
 
     def call(self, inputs, training=False):
         &#34;&#34;&#34;Override call method.
 
         parent:
         &#34;&#34;&#34;
+        self.layer.kernel.assign(self.layer.kernel * self.mask)
         return self.layer.call(inputs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -181,6 +288,22 @@ class PruningWrapper(keras.layers.Wrapper):
 <li>tensorflow.python.training.tracking.base.Trackable</li>
 <li>tensorflow.python.keras.utils.version_utils.LayerVersionSelector</li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="condense.keras.wrappers.PruningWrapper.kernel"><code class="name">var <span class="ident">kernel</span></code></dt>
+<dd>
+<div class="desc"><p>Returns the pruned kernel of this layer.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def kernel(self):
+    &#34;&#34;&#34;Returns the pruned kernel of this layer.&#34;&#34;&#34;
+    return self.layer.kernel * self.mask</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="condense.keras.wrappers.PruningWrapper.build"><code class="name flex">
@@ -201,6 +324,7 @@ class PruningWrapper(keras.layers.Wrapper):
     super(PruningWrapper, self).build(input_shape)
     self.layer.build(input_shape)
     self.layer.built = True
+    self.__build_mask(input_shape)
     self.built = True</code></pre>
 </details>
 </dd>
@@ -219,6 +343,7 @@ class PruningWrapper(keras.layers.Wrapper):
 
     parent:
     &#34;&#34;&#34;
+    self.layer.kernel.assign(self.layer.kernel * self.mask)
     return self.layer.call(inputs)</code></pre>
 </details>
 </dd>
@@ -246,6 +371,7 @@ you can set a desired sparsity through this argument</dd>
     &#34;&#34;&#34;
     if not t_sparsity:
         t_sparsity = self.strategy.get_epoch_sparsity()
+
     # Calc Threshold
     abs_weights = tf.sort(tf.reshape(tf.math.abs(self.layer.kernel), [-1]))
 
@@ -253,10 +379,11 @@ you can set a desired sparsity through this argument</dd>
     threshold = tf.gather(abs_weights,
                           tf.cast(size * t_sparsity, dtype=tf.int32))
 
-    mask = tf.cast(tf.math.greater_equal(tf.math.abs(self.layer.kernel), threshold), dtype=tf.float32)
+    # Assign Mask
+    self.mask.assign(tf.cast(tf.math.greater_equal(tf.math.abs(self.layer.kernel), threshold), dtype=tf.float32))
 
     # Apply mask on weight layer
-    self.layer.kernel.assign(self.layer.kernel * mask)
+    self.layer.kernel.assign(self.layer.kernel * self.mask)
 
     # Update Step
     return tf.no_op(&#39;Pruning&#39;)</code></pre>
@@ -278,6 +405,11 @@ you can set a desired sparsity through this argument</dd>
 <li><code><a title="condense.keras" href="#/pdoc/condense/keras/index.html">condense.keras</a></code></li>
 </ul>
 </li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="condense.keras.wrappers.get_internal_weights" href="#/pdoc/condense/keras/wrappers.html#condense.keras.wrappers.get_internal_weights">get_internal_weights</a></code></li>
+</ul>
+</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
@@ -285,6 +417,7 @@ you can set a desired sparsity through this argument</dd>
 <ul class="">
 <li><code><a title="condense.keras.wrappers.PruningWrapper.build" href="#/pdoc/condense/keras/wrappers.html#condense.keras.wrappers.PruningWrapper.build">build</a></code></li>
 <li><code><a title="condense.keras.wrappers.PruningWrapper.call" href="#/pdoc/condense/keras/wrappers.html#condense.keras.wrappers.PruningWrapper.call">call</a></code></li>
+<li><code><a title="condense.keras.wrappers.PruningWrapper.kernel" href="#/pdoc/condense/keras/wrappers.html#condense.keras.wrappers.PruningWrapper.kernel">kernel</a></code></li>
 <li><code><a title="condense.keras.wrappers.PruningWrapper.prune" href="#/pdoc/condense/keras/wrappers.html#condense.keras.wrappers.PruningWrapper.prune">prune</a></code></li>
 </ul>
 </li>

@@ -31,7 +31,8 @@
 
 from condense.keras.callbacks import PruningCallback
 from condense.keras.prune_model import wrap_model
-from condense.keras.wrappers import PruningWrapper</code></pre>
+from condense.keras.wrappers import PruningWrapper
+from .lottery_ticket import find_winning_ticket, Trainer</code></pre>
 </details>
 </section>
 <section>
@@ -40,6 +41,10 @@ from condense.keras.wrappers import PruningWrapper</code></pre>
 <dt><code class="name"><a title="condense.keras.callbacks" href="#/pdoc/condense/keras/callbacks.html">condense.keras.callbacks</a></code></dt>
 <dd>
 <div class="desc"><p>This module implements a keras callback object used for the model.fit() operation …</p></div>
+</dd>
+<dt><code class="name"><a title="condense.keras.lottery_ticket" href="#/pdoc/condense/keras/lottery_ticket.html">condense.keras.lottery_ticket</a></code></dt>
+<dd>
+<div class="desc"><p>This module implements a use case for the lottery ticket hypothesis …</p></div>
 </dd>
 <dt><code class="name"><a title="condense.keras.prune_model" href="#/pdoc/condense/keras/prune_model.html">condense.keras.prune_model</a></code></dt>
 <dd>
@@ -76,6 +81,7 @@ from condense.keras.wrappers import PruningWrapper</code></pre>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="condense.keras.callbacks" href="#/pdoc/condense/keras/callbacks.html">condense.keras.callbacks</a></code></li>
+<li><code><a title="condense.keras.lottery_ticket" href="#/pdoc/condense/keras/lottery_ticket.html">condense.keras.lottery_ticket</a></code></li>
 <li><code><a title="condense.keras.prune_model" href="#/pdoc/condense/keras/prune_model.html">condense.keras.prune_model</a></code></li>
 <li><code><a title="condense.keras.support" href="#/pdoc/condense/keras/support.html">condense.keras.support</a></code></li>
 <li><code><a title="condense.keras.wrappers" href="#/pdoc/condense/keras/wrappers.html">condense.keras.wrappers</a></code></li>
