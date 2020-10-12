@@ -72,3 +72,37 @@ pruned = condense.one_shot(model, 0.3)
 
 # weights are now pruned
 #+END_SRC
+
+** Automtated pruning with ~condense.keras.Trainer~
+
+A more suffisticated approach to pruning is, to first train and prune the model M.
+After the first training run the model gets reset to its initial parameter configuration and the sparsity mask of step one is applied.
+We train this smaller network P \subset M on the same training data and it should yield better results than the original network.
+
+#+BEGIN_QUOTE
+This is an implementation of the lottery ticket hypothesis ([[https://arxiv.org/abs/1803.03635][arXiv.org]]).
+#+END_QUOTE
+
+#+BEGIN_SRC python
+import keras
+import condense
+
+# Prints out information about the training process
+import logging
+condense.logger.setLevel(logging.INFO)
+
+model = ...
+train_generator = ...  # Train data
+test_generator = ...  # Test data
+
+# the target sparsity is 80% for training
+trainer = condense.keras.Trainer(model, 0.8)
+
+trainer.train(train_generator,
+              epochs=50,
+              steps_per_epoch=2,
+              eval_data=test_generator)
+
+pruned_model = trainer.training_model  # Training Model
+masks = trainer.mask
+#+END_SRC
