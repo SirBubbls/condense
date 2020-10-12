@@ -16,7 +16,7 @@ def _dense_generator():
 def dense_model():
     """Prepare test keras model."""
     model = keras.models.Sequential(layers=[
-        Dense(256, input_shape=(None, 10)),
+        Dense(256, input_shape=(10, )),
         Dense(128),
         Dense(16)
     ])
@@ -60,8 +60,6 @@ def test_trainer(dense_model):
         if not isinstance(layer, condense.keras.PruningWrapper):
             continue
 
-        logging.info(f'{layer.name} kernel after training: {layer.layer.kernel.numpy()}')
-
         assert (layer.mask.numpy() == (layer.kernel.numpy() != 0)).all(), f'sparsity lost {layer.name} ({i})'
 
 
@@ -98,3 +96,15 @@ def test_trainer_reset(dense_model):
 
         for current_w, init_w in zip(layer_weights, init_weights):
             assert (current_w == init_w).all(), f'weights at layer {i} not in initial configuration'
+
+
+def test_trainer_workflow(dense_model):
+    """Test minimal workflow."""
+    trainer = condense.keras.Trainer(dense_model, 0.9)
+    trainer.train(_dense_generator(), epochs=2, steps_per_epoch=2)
+    assert trainer.training_model
+
+    # Check if model is actually pruned
+    for layer in trainer.training_model.layers:
+        sparsity = condense.utils.layer_utils.calc_layer_sparsity(layer.kernel.numpy())
+        assert abs(sparsity - 0.9) < 1e-4
