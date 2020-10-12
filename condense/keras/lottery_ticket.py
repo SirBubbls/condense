@@ -15,20 +15,23 @@ from . import PruningCallback, PruningWrapper
 from .prune_model import wrap_model
 
 
-def find_winning_ticket(model, dataset, validation_data=None):
+def find_winning_ticket(model, dataset, epochs=30, validation_data=None):
     """This function tries to find a winning ticket of a model.
+
+    For more information about 'winning tickets' please refer to https://arxiv.org/abs/1803.03635.
 
     Args:
       model: keras model
-      dataset: dataset generator
-      sparsity: desired target sparsity
+      dataset (generator): dataset generator
+      epochs (int): number of epochs used for searching
+      validation_data (generator):
 
     Returns:
       history of .fit operation
-      sparsity masks for each layer
+      sparsity masks of the winning ticket for each layer
     """
     hist = model.fit(dataset,
-                     epochs=30,
+                     epochs=epochs,
                      steps_per_epoch=2,
                      callbacks=[PruningCallback()],
                      verbose=0,
@@ -57,12 +60,12 @@ class Trainer():
         history (dict): A dict with the results of each training/optimization step.
         training_model (keras.models.Model): model for training
     """
-    def __init__(self, model, t_sparsity):
-        """Constructor.
+    def __init__(self, model, t_sparsity=None):
+        """Pass the base model and target weight sparsity of the pruning process.
 
         Args:
-           model (keras.models.Model): An unpruned keras model
-           t_sparsity (float): desired sparsity of each layer
+           model (keras.models.Model): An unpruned (compiled) keras model
+           t_sparsity (float): desired sparsity of each layer (only required if model is not wrapped)
         """
         # Default or model optimizer & loss
         if not model.optimizer or not model.loss:
@@ -95,6 +98,10 @@ class Trainer():
             condense.logger.warning("""Passed model is not yet wrapped.
             Model will get wrapped automatically. If you want more control over wrapping please call
             condense.keras.wrap_model on your model first and then use this class.""")
+
+            if not self.t_sparsity:
+                raise ValueError('Model is not wrapped and you didn\'t define a target sparsity.')
+
             self.training_model = wrap_model(self.training_model,
                                              Constant(self.t_sparsity))
 
