@@ -12,6 +12,6 @@ def mask_min_value(ndarray, target_sparsity):
       ndarray: sparsity mask
     """
     shape = ndarray.shape
-    ndarray = ndarray.flatten()
+    ndarray = np.abs(ndarray.flatten())
     thres = np.sort(ndarray)[int(len(ndarray) * target_sparsity)]
     return (ndarray < thres).reshape(shape)
