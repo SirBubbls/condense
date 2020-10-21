@@ -99,6 +99,13 @@ class PruningWrapper(keras.layers.Wrapper):
                 initializer='ones',
                 trainable=False
             )
+        if isinstance(self.layer, keras.layers.Conv2D):
+            self.mask = self.add_weight(
+                name=f'{self.layer.name}_mask',
+                shape=self.layer.kernel.shape,
+                initializer='ones',
+                trainable=False
+            )
 
     def call(self, inputs, training=False):
         """Override call method.
