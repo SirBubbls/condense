@@ -9,7 +9,7 @@ import numpy as np
 
 def _dense_generator():
     while True:
-        yield np.random.rand(10).reshape(1, -1), np.random.rand(16)
+        yield np.random.random((1, 1, 10)), np.random.rand(16)
 
 
 @pytest.fixture
@@ -27,7 +27,7 @@ def dense_model():
 def test_lottery_ticket(dense_model):
     def generator():
         while True:
-            yield np.random.rand(10).reshape(1, -1), np.random.rand(16)
+            yield np.random.random((1, 1, 10)), np.random.rand(16)
 
     pruned = condense.keras.wrap_model(dense_model, condense.optimizer.sparsity_functions.Linear(0.8))
     pruned.summary()
@@ -59,8 +59,6 @@ def test_trainer(dense_model):
     for i, layer in enumerate(trainer.training_model.layers):
         if not isinstance(layer, condense.keras.PruningWrapper):
             continue
-
-        logging.info(f'{layer.name} kernel after training: {layer.layer.kernel.numpy()}')
 
         assert (layer.mask.numpy() == (layer.kernel.numpy() != 0)).all(), f'sparsity lost {layer.name} ({i})'
 
