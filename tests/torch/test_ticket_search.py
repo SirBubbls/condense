@@ -10,8 +10,9 @@ from logging import info
 ds_train, ds_test = tfds.load('mnist', split=['train', 'test'], shuffle_files=True, as_supervised=True)
 
 def generator(batch_size, data_set):
+    _gen = iter(tfds.as_numpy(data_set.batch(batch_size).cache()))
     while True:
-        X, y = next(tfds.as_numpy(data_set.batch(batch_size).cache()))
+        X, y = next(_gen)
         yield torch.Tensor(X.reshape(batch_size, 1, 28, 28)), torch.Tensor(y).type(torch.LongTensor)
 
 gen = generator(300, ds_train)

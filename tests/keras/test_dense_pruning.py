@@ -114,7 +114,8 @@ def test_iris_pruning():
     assert ds, 'datasets could not be loaded'
 
     # Loading Iris Model
-    model = keras.models.load_model('tests/iris.h5')
+    model = keras.models.load_model('tests/iris.h5', compile=False)
+    model.compile('adam', 'categorical_crossentropy')
     assert model, 'iris model could not be loaded'
 
     # Evaluate old model
