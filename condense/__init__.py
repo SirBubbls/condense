@@ -11,6 +11,7 @@ import sys
 import condense.optimizer
 import condense.utils
 import condense.keras
+import condense.torch
 
 logger = logging.getLogger('condense')
 

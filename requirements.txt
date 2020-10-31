@@ -4,3 +4,4 @@ tensorflow
 pillow
 glob3
 tensorflow_datasets
+torch
