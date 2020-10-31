@@ -25,7 +25,7 @@ def masking_fn(X, t_sparsity):
 class PruningAgent(nn.Module):
     """This class augments an existing torch module with callbacks and parameter masks."""
 
-    def __init__(self, model, strategy):
+    def __init__(self, model, strategy=None):
         """You need to pass a module and a constant sparsity strategy.
 
         Args:
@@ -34,16 +34,17 @@ class PruningAgent(nn.Module):
         """
         super(PruningAgent, self).__init__()
 
-        if not isinstance(strategy, Constant):
-            raise Exception('Currently only the constant sparsity strategy is supported.')
         self.model = model
 
         # Parameter masks
         self.mask = {}
-        self.layer_strategies = self.__init_per_layer_sparsity_strategies(strategy)
         self.masking_fn = masking_fn
+        if strategy:
+            if not isinstance(strategy, Constant):
+                raise Exception('Currently only the constant sparsity strategy is supported.')
+            self.layer_strategies = self.__init_per_layer_sparsity_strategies(strategy)
 
-        self.__init_parameter_masks()
+        self.init_parameter_masks()
         self.__wrap_sub_modules()
 
     def __init_per_layer_sparsity_strategies(self, strategy):
@@ -54,7 +55,7 @@ class PruningAgent(nn.Module):
 
         return strat
 
-    def __init_parameter_masks(self, initialize_ones=False):
+    def init_parameter_masks(self, initialize_ones=True):
         """Initialize parameter masks.
 
         Args:
@@ -70,11 +71,11 @@ class PruningAgent(nn.Module):
     def __wrap_sub_modules(self):
         """Applies pruning functionality to every parameter of the actual model."""
         for param in self.model.parameters():
-            param.register_hook(lambda g, mask=self.mask[param]: g * mask)
-            # param.register_hook(lambda g, p=param: self.__update_parameter_mask(p))
+            param.register_hook(lambda g, p=param: g * self.mask[p])
+            # param.register_hook(lambda g, p=param: self._update_parameter_mask(p))
             # param.register_hook(lambda g, p=param: self.layer_strategies[p].next_epoch())
 
-    def __update_parameter_mask(self, p):
+    def _update_parameter_mask(self, p):
         """Update masks for a parameter p."""
         self.mask[p] = self.masking_fn(p, self.layer_strategies[p])
 
