@@ -56,7 +56,7 @@ def conv_model():
 
 def test_reinitialization(conv_model):
     """Checks if the parameters get reinitialized to the original parameters."""
-    pruned = condense.torch.PruningAgent(conv_model, condense.optimizer.sparsity_functions.Constant(0.7))
+    pruned = condense.torch.PruningAgent(conv_model, condense.optimizer.sparsity_functions.Constant(0.7), apply_mask=False)
     pre_pruning = [p.clone().detach().numpy() for p in pruned.model.parameters()]
 
     # search
@@ -77,5 +77,5 @@ def test_reinitialization(conv_model):
         assert (old == pruned.mask[p].numpy()).all(), 'mask changed during training'
 
     # mask was considered during training
-    for param in pruned.model.parameters():
+    for param in pruned.to_prune:
         assert ((param.detach().numpy() != 0) == pruned.mask[param].detach().numpy()).all()

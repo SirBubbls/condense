@@ -25,16 +25,30 @@ def masking_fn(X, t_sparsity):
 class PruningAgent(nn.Module):
     """This class augments an existing torch module with callbacks and parameter masks."""
 
-    def __init__(self, model, strategy=None):
+    def __init__(self, model, strategy=None, apply_mask=False, ignored_params=[]):
         """You need to pass a module and a constant sparsity strategy.
 
         Args:
            model (torch.nn.Module): existing torch module
            strategy: the sparisty target strategy
+           apply_mask (boolean): if this is true a mask will get generated and applied on initialization
+           ignored_params (list): no pruning gets applied onto the element in the list
         """
         super(PruningAgent, self).__init__()
 
         self.model = model
+
+        # create a list of parameters to prune
+        _ignored_params = []
+        for param in ignored_params:
+            if isinstance(param, nn.Module):
+                _ignored_params.extend(list(param.parameters()))
+            elif isinstance(param, nn.parameter.Parameter):
+                _ignored_params.append(param)
+            else:
+                raise Exception('only parameters and modules are supported in argument ignored_params')
+
+        self.to_prune = self.__get_parameters_to_prune(_ignored_params)
 
         # Parameter masks
         self.mask = {}
@@ -44,8 +58,23 @@ class PruningAgent(nn.Module):
                 raise Exception('Currently only the constant sparsity strategy is supported.')
             self.layer_strategies = self.__init_per_layer_sparsity_strategies(strategy)
 
-        self.init_parameter_masks()
+        self.init_parameter_masks(not apply_mask)
         self.__wrap_sub_modules()
+
+    def __get_parameters_to_prune(self, ignored_params):
+        params = []
+
+        for param in self.model.parameters():
+            is_ignored = False
+            for ignored_param in ignored_params:
+                if param is ignored_param:
+                    is_ignored = True
+                    break
+
+            if not is_ignored:
+                params.append(param)
+
+        return params
 
     def __init_per_layer_sparsity_strategies(self, strategy):
         strat = {}
@@ -61,7 +90,7 @@ class PruningAgent(nn.Module):
         Args:
           initialize_ones (boolean): initialize mask values as 1 (no masking)
         """
-        for p in self.model.parameters():
+        for p in self.to_prune:
             if initialize_ones:
                 self.mask[p] = torch.ones(p.size())
             else:
@@ -70,7 +99,7 @@ class PruningAgent(nn.Module):
 
     def __wrap_sub_modules(self):
         """Applies pruning functionality to every parameter of the actual model."""
-        for param in self.model.parameters():
+        for param in self.to_prune:
             param.register_hook(lambda g, p=param: g * self.mask[p])
             # param.register_hook(lambda g, p=param: self._update_parameter_mask(p))
             # param.register_hook(lambda g, p=param: self.layer_strategies[p].next_epoch())

@@ -42,7 +42,7 @@ class TicketSearch():
         logger.info('💾 Storing module parameters for reinitialization')
 
         # Saving parameters
-        self._original_params = [p.clone().detach() for p in self.agent.model.parameters()]
+        self._original_params = [p.clone().detach() for p in self.agent.to_prune]
 
         logger.info('🔬 Searching for winning ticket')
 
@@ -54,7 +54,7 @@ class TicketSearch():
         self.agent.init_parameter_masks(initialize_ones=False)
 
         # reinitialized weights & and apply mask to reinitialized tensors
-        for p, w in zip(self.agent.model.parameters(), self._original_params):
+        for p, w in zip(self.agent.to_prune, self._original_params):
             p.data = w.data * self.agent.mask[p]
 
         logger.info('😄 Reinitialized module parameters')
