@@ -5,7 +5,9 @@ graph TD
     condense --- keras
     condense --- optimizer
     condense --- utils
+    condense --- torch
     condense -.- compressor
+    
     
     keras --- wrap_model(wrap_model)
 ```

@@ -66,6 +66,7 @@ def test_reinitialization(conv_model):
     after_pruning = [p.clone().detach().numpy() for p in pruned.model.parameters()]
     ticket_mask = [m.detach().numpy() for m in pruned.mask.values()]
 
+    # reinit tests
     for pre, after, mask in zip(pre_pruning, after_pruning, pruned.mask.values()):
         assert (pre * mask.numpy() == after).all(), 'lottery ticket search params were not reinitialized correctly'
 
