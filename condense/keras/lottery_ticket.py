@@ -5,7 +5,6 @@ There is also an implementation available at https://github.com/google-research/
 """
 from copy import deepcopy
 
-import keras
 import numpy as np
 
 import condense
