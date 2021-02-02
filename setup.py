@@ -8,7 +8,7 @@ with open(path.join(this_directory, 'pypi-description.md'), encoding='utf-8') as
 setup(
     name='condense',
     packages=['condense'],
-    version='0.2.0',
+    version='0.2.1',
     license='MIT',
     description='Neural Network Pruning Framework',
     long_description=long_description,
