@@ -37,7 +37,8 @@ class PruningWrapper(keras.layers.Wrapper):
         self.layer = layer
         self.strategy = strategy
         self.mask = self.add_weight(
-            name=f'{layer.name}_mask'
+            name=f'{layer.name}_mask',
+            trainable=False
         )
         if isinstance(layer, keras.layers.Dense):
             self.units = self.layer.units
@@ -95,6 +96,13 @@ class PruningWrapper(keras.layers.Wrapper):
             self.mask = self.add_weight(
                 name=f'{self.layer.name}_mask',
                 shape=(input_shape[-1], self.units),
+                initializer='ones',
+                trainable=False
+            )
+        if isinstance(self.layer, keras.layers.Conv2D):
+            self.mask = self.add_weight(
+                name=f'{self.layer.name}_mask',
+                shape=self.layer.kernel.shape,
                 initializer='ones',
                 trainable=False
             )

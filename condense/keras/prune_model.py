@@ -10,6 +10,8 @@ from copy import deepcopy
 def wrap_model(model, sparsity_fn):
     """This function turns a model into a prunable copy of itself.
 
+    Every output layer ('output' in name) won't get affected by pruning.
+
     Args:
       model: Target model
       sparsity_fn: desired sparsity function for this model

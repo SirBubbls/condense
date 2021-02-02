@@ -1,6 +1,6 @@
 numpy
-keras
+keras==2.4.3
 tensorflow
 pillow
-glob3
 tensorflow_datasets
+torch

@@ -1,15 +1,18 @@
 """Model pruning module tests."""
 import keras
 import pytest
+import sys
 from logging import info
 from condense.optimizer.model_operations.pruning import prune_model
 from condense.utils.model_utils import calc_model_sparsity
+sys.path.append('tests/keras')
+from models import iris
 
 
 @pytest.fixture
 def example_model():
     """Prepare test keras model."""
-    return keras.models.load_model('tests/test_model.h5')
+    return iris()
 
 
 def test_simple_model_pruning(example_model):
